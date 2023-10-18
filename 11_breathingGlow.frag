@@ -1,5 +1,6 @@
-// Author:CMH
-// Title:BreathingGlow
+// Author: qui900826
+// Title: MoonLight
+
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -8,33 +9,113 @@ uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
 
-float glow(float d, float str, float thickness){
+float glow(float d, float str, float thickness)
+{
     return thickness / pow(d, str);
 }
 
-void main() {
-    vec2 uv = gl_FragCoord.xy/u_resolution.xy;
-    uv.x *= u_resolution.x/u_resolution.y;
-    uv= uv*2.0-1.0;
-
-    float pi=3.14159;
-
-    //定義圓環
-    float dist = length(uv);
-    float circle_dist = abs(dist-0.512);								//光環大小
-    
-    //動態呼吸
-    float breathing=sin(u_time*2.0*pi/4.0)*0.5+0.5;						//option1
-    //float breathing=(exp(sin(u_time/2.0*pi)) - 0.36787944)*0.42545906412; 			//option2 正確
-    //float strength =(0.2*breathing*dir+0.180);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
-    float strength =(0.2*breathing+0.180);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
-    float thickness=(0.1*breathing+0.084);			//[0.1~0.2]			//光環厚度 營造呼吸感
-    float glow_circle = glow(circle_dist, strength, thickness);
-    gl_FragColor = vec4(vec3(glow_circle)*vec3(1.0, 0.5, 0.25),1.0);
+float random (in vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(12.9898,78.233)))*
+        43758.5453123);
 }
 
+// Based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noise (in vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
 
+    // Four corners in 2D of a tile
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
 
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+}
+
+#define OCTAVES 6
+float fbm (in vec2 st) {
+    // Initial values
+    float value = 0.0;
+    float amplitude = .5;
+    float frequency = 0.;
+    //
+    // Loop of octaves
+    for (int i = 0; i < OCTAVES; i++) {
+        value += amplitude * noise(st);
+        st *= 2.;
+        amplitude *= .5;
+    }
+    return value;
+}
+
+void main() 
+{
+    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+    uv.x *= u_resolution.x / u_resolution.y;
+    uv = uv * 2.0 - 1.0;
+
+    float pi = 3.14159;
+    // float info = hash2(uv*200.0).x; // *200 no problem
+    
+    float info = fbm(uv + u_time * vec2(0.1, sin(0.05*u_time)/400.0));
+
+    // 定義光環
+    float dist = length(uv);
+    float circle_dist = abs(dist - 0.248); // 光環大小
+    
+    // 動態呼吸
+    // float breathing = sin(u_time * 2.0 * pi / 8.0) * 0.5 + 0.5; // option1
+    // float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 108.0; // apple original breath function
+    float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 0.3; // option2
+    float strength = (0.2 * breathing * dist + 0.276);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
+    // float strength = (0.2 * breathing + 0.180); // [0.2~0.3] //光暈強度加上動態時間營造呼吸感
+    float thickness = (0.1 * breathing + 0.028); // [0.1~0.2] //光環厚度加上動態時間營造呼吸感
+    float glow_circle = glow(circle_dist, strength, thickness);
+    gl_FragColor = vec4(vec3(glow_circle+info*0.092) * vec3(0.776,0.772,1.000), 1.0);
+    // gl_FragColor = vec4(vec3(info), 1.0);
+}
+
+// // Author:CMH
+// // Title:BreathingGlow
+// #ifdef GL_ES
+// precision mediump float;
+// #endif
+
+// uniform vec2 u_resolution;
+// uniform vec2 u_mouse;
+// uniform float u_time;
+
+// float glow(float d, float str, float thickness){
+//     return thickness / pow(d, str);
+// }
+
+// void main() {
+//     vec2 uv = gl_FragCoord.xy/u_resolution.xy;
+//     uv.x *= u_resolution.x/u_resolution.y;
+//     uv= uv*2.0-1.0;
+
+//     float pi=3.14159;
+
+//     //定義圓環
+//     float dist = length(uv);
+//     float circle_dist = abs(dist-0.512);								//光環大小
+    
+//     //動態呼吸
+//     float breathing=sin(u_time*2.0*pi/4.0)*0.5+0.5;						//option1
+//     //float breathing=(exp(sin(u_time/2.0*pi)) - 0.36787944)*0.42545906412; 			//option2 正確
+//     //float strength =(0.2*breathing*dir+0.180);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
+//     float strength =(0.2*breathing+0.180);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
+//     float thickness=(0.1*breathing+0.084);			//[0.1~0.2]			//光環厚度 營造呼吸感
+//     float glow_circle = glow(circle_dist, strength, thickness);
+//     gl_FragColor = vec4(vec3(glow_circle)*vec3(1.0, 0.5, 0.25),1.0);
+// }
 
 /*
 // Author:CMH
