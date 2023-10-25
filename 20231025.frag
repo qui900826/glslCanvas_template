@@ -57,6 +57,16 @@ float fbm(in vec2 uv) //亂數範圍 [-1,1]
     return f;
 }
 
+float sdEgg( in vec2 p, in float ra, in float rb )
+{
+    const float k = sqrt(3.0);
+    p.x = abs(p.x);
+    float r = ra - rb;
+    return ((p.y<0.0)       ? length(vec2(p.x,  p.y    )) - r :
+            (k*(p.x+r)<p.y) ? length(vec2(p.x,  p.y-k*r)) :
+                              length(vec2(p.x+r,p.y    )) - 2.0*r) - rb;
+}
+
 void main()
 {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
@@ -73,18 +83,33 @@ void main()
     float fog = fbm(0.4 * uv + vec2(-0.1 * u_time, -0.02 * u_time)) * 0.6 + 0.1;
 
     // 定義光環
-    float dist = length(uv);
-    float circle_dist = abs(dist - 0.368); // 光環大小
+    // float weight = smoothstep(0.216, 0.368, uv.y);
+    // float noise = gnoise(uv*5.019)*0.04*weight;
+    // float dist = length(uv) + noise;
+    // float circle_dist = abs(dist - 0.368); // 光環大小
+    
+    float result;
+    
+    for(int i = 0; i<8; i++)
+    {
+        float weight = smoothstep(0.112, 0.024, uv.y);
+        float freq = 8.0+float(i)*20.;
+    	// float noise = gnoise(uv*5.019*float(i*50))*0.04*weight;
+        float noise = gnoise(uv*freq)*0.04*weight;
+        // model
+        float model_dist = abs(sdEgg(uv, 0.256, 0.160) + noise);
+        
+        // 動態呼吸
+        // float breathing = sin(u_time * 2.0 * pi / 8.0) * 0.5 + 0.5; // option1
+        // float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 108.0; // apple original breath function
+        float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 0.3; // option2
+        float strength = (0.2 * breathing * model_dist + 0.276);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
+        // float strength = (0.2 * breathing + 0.180); // [0.2~0.3] //光暈強度加上動態時間營造呼吸感
+        float thickness = (0.1 * breathing + 0.028); // [0.1~0.2] //光環厚度加上動態時間營造呼吸感
+        // float glow_circle = glow(circle_dist, strength, thickness);
+        float glow_circle = glow(model_dist, strength, thickness);
+        result = glow_circle;
+    }
 
-
-    // 動態呼吸
-    // float breathing = sin(u_time * 2.0 * pi / 8.0) * 0.5 + 0.5; // option1
-    // float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 108.0; // apple original breath function
-    float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 0.3; // option2
-    float strength = (0.2 * breathing * dist + 0.276);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
-    // float strength = (0.2 * breathing + 0.180); // [0.2~0.3] //光暈強度加上動態時間營造呼吸感
-    float thickness = (0.1 * breathing + 0.028); // [0.1~0.2] //光環厚度加上動態時間營造呼吸感
-    float glow_circle = glow(circle_dist, strength, thickness);
-
-    gl_FragColor = vec4((vec3(glow_circle) + fog) * dir * vec3(0.776, 0.772, 1.000), 1.0);
+    gl_FragColor = vec4((vec3(result) + fog) * dir * vec3(0.776, 0.772, 1.000), 1.0);
 }
