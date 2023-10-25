@@ -90,26 +90,29 @@ void main()
     
     float result;
     
-    for(int i = 0; i<8; i++)
+    for(float i = 0.; i<8.; i++)
     {
-        float weight = smoothstep(0.112, 0.024, uv.y);
-        float freq = 8.0+float(i)*20.;
-    	// float noise = gnoise(uv*5.019*float(i*50))*0.04*weight;
-        float noise = gnoise(uv*freq)*0.04*weight;
-        // model
-        float model_dist = abs(sdEgg(uv, 0.256, 0.160) + noise);
+        
         
         // 動態呼吸
         // float breathing = sin(u_time * 2.0 * pi / 8.0) * 0.5 + 0.5; // option1
         // float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 108.0; // apple original breath function
-        float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.36787944) * 0.3; // option2
-        float strength = (0.2 * breathing * model_dist + 0.276);			//[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
+        float breathing = (exp(sin(u_time / 2.0 * pi)) - 0.952) * 0.3; // option2
+        float strength = (0.040 * breathing + 0.3); //[0.2~0.3]			//光暈強度加上動態時間營造呼吸感
         // float strength = (0.2 * breathing + 0.180); // [0.2~0.3] //光暈強度加上動態時間營造呼吸感
-        float thickness = (0.1 * breathing + 0.028); // [0.1~0.2] //光環厚度加上動態時間營造呼吸感
+        float thickness = (0.01 * breathing + 0.012); // [0.1~0.2] //光環厚度加上動態時間營造呼吸感
         // float glow_circle = glow(circle_dist, strength, thickness);
+        
+        float weight = smoothstep(-0.584, 1.5, -uv.y)*1.976*dir;
+        float freq = 1.208+i*0.512 ;
+    	float noise = gnoise(uv*1.235*freq)*weight*0.5*breathing*1.2; //*abs(sin(u_time/6.))
+        // float noise = gnoise(uv*freq)*-0.024*weight;
+        // model
+        float model_dist = abs(sdEgg(uv, 0.272, 0.264) + noise);
+        
         float glow_circle = glow(model_dist, strength, thickness);
-        result = glow_circle;
+        result += glow_circle;
     }
 
-    gl_FragColor = vec4((vec3(result) + fog) * dir * vec3(0.776, 0.772, 1.000), 1.0);
+    gl_FragColor = vec4((vec3(result) + fog) * vec3(0.776, 0.772, 1.000), 1.0);
 }
