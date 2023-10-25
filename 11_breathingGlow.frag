@@ -64,7 +64,7 @@ void main()
     float pi = 3.14159;
     // float info = hash2(uv*200.0).x; // *200 no problem
     
-    float info = fbm(uv + u_time * vec2(0.1, sin(0.05*u_time)/400.0));
+    float fog = fbm(uv + u_time * vec2(0.1, sin(0.05*u_time)/400.0));
 
     // 定義光環
     float dist = length(uv);
@@ -78,7 +78,7 @@ void main()
     // float strength = (0.2 * breathing + 0.180); // [0.2~0.3] //光暈強度加上動態時間營造呼吸感
     float thickness = (0.1 * breathing + 0.028); // [0.1~0.2] //光環厚度加上動態時間營造呼吸感
     float glow_circle = glow(circle_dist, strength, thickness);
-    gl_FragColor = vec4(vec3(glow_circle+info*0.092) * vec3(0.776,0.772,1.000), 1.0);
+    gl_FragColor = vec4(vec3(glow_circle+fog*0.092) * vec3(0.776,0.772,1.000), 1.0);
     // gl_FragColor = vec4(vec3(info), 1.0);
 }
 
