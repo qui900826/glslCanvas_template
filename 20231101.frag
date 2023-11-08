@@ -105,7 +105,7 @@ void main()
     float dir = dot(point, (uv)) + 0.55;
     
     //互動陰晴圓缺
-    float interact=1.-mouseEffect(uv,mouse,0.35);
+    float interact=1.-mouseEffect(uv,mouse,0.110);
 
     //亂數作用雲霧
     float fog = fbm(0.4 * uv + vec2(-0.1 * u_time, -0.02 * u_time)) * 0.6 + 0.1;
@@ -136,9 +136,9 @@ void main()
     	// float noise = gnoise(uv*1.355*freq)*weight*0.5*breathing; //*abs(sin(u_time/6.))
         // float noise = gnoise(uv*freq)*-0.024*weight;
         float noise_position= interact;
-    	float radius_noise=noise(vec3(4.892*uv,i+u_time*0.388))*0.280*noise_position;
+    	float radius_noise=noise(vec3(4.892*uv,i+u_time*0.188))*0.280*noise_position;
         // model
-        float model_dist = abs(sdEgg(uv, 0.344, 0.288) + radius_noise*1.3);
+        float model_dist = abs(sdEgg(uv, 0.328, 0.200) + radius_noise*0.564);
         
         float glow_circle = glow(model_dist, strength, thickness);
         result += glow_circle;
