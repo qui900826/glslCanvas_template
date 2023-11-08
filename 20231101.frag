@@ -91,12 +91,14 @@ float mouseEffect(vec2 uv, vec2 mouse, float size)
 void main()
 {
     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-    uv.x *= u_resolution.x / u_resolution.y;
     uv = uv * 2.0 - 1.0;
+    uv.x *= u_resolution.x / u_resolution.y;
     
-    vec2 mouse=u_mouse/u_resolution.xy;
-    mouse.x*= u_resolution.x/u_resolution.y;
+    
+    
+    vec2 mouse = u_mouse/u_resolution.xy;
     mouse=mouse*2.0-1.0;
+    mouse.x *= u_resolution.x/u_resolution.y;
     
     //陰晴圓缺
     float pi = 3.14159;
