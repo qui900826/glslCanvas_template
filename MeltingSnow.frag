@@ -242,7 +242,7 @@ vec4 getBump (vec2 pos, vec2 uv) {
     return bump;
 }
 
-float breathing=(exp(sin(u_time*2.0*3.14159/16.0)) - 0.36787944)*0.42545906412;
+float breathing=(exp(sin(u_time*2.0*3.14159/32.0)) - 0.36787944)*0.42545906412;
 float mouseEffect(vec2 uv, vec2 mouse, float size)
 {
     float dist=length(uv-mouse);
@@ -284,5 +284,6 @@ void main(void)
     // mouse
 	float value=mouseEffect(uv,mouse,0.05);
 
-    gl_FragColor = vec4(color*0.8*breathing, bump.w * .8) + shadeColor*0.8 + value*0.3*breathing;
+    // gl_FragColor = vec4(color*0.8*breathing, bump.w * .8) + shadeColor*0.8 + value*0.3*breathing;
+	gl_FragColor = vec4(color*0.8*(value+0.5)*breathing, bump.w * .8) + shadeColor*0.8;
 }
