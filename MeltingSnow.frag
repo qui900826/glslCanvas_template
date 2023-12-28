@@ -32,7 +32,7 @@ uniform float u_time;
 
 uniform sampler2D u_tex0;
 
-int mouseMoving = 0; // new 1229
+float mouseMoving = 0.0;
 
 float rand(vec2 n) { 
     return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
@@ -66,7 +66,7 @@ vec2 cellular(vec3 P) {
 #define K2 0.020408163265306 // 1/(7*7)
 #define Kz 0.166666666667 // 1/6
 #define Kzo 0.416666666667 // 1/2-1/6*2
-#define jitter 1. // smaller jitter gives more regular pattern // new 1229
+#define jitter 1.0 // smaller jitter gives more regular pattern // new 1229
 
 	vec3 Pi = mod(floor(P), 289.0);
  	vec3 Pf = fract(P) - 0.5;
@@ -218,13 +218,7 @@ vec2 cellular(vec3 P) {
 }
 
 float getDepth(vec2 pos, vec2 uv) {
-    // vec2 cellSmall = cellular(vec3(pos, u_time * .2)); // u_time<<
-	// vec2 cellSmall = cellular(vec3(pos, .02 * float(1-mouseMoving) + u_time * float(mouseMoving) * .02));
-
-	vec2 cellSmall;
-	// float pauseTime = 0.0, playTime = 0.0;
-	if(mouseMoving > 0) cellSmall = cellular(vec3(pos, u_time * .2));
-	else cellSmall = cellular(vec3(pos, u_time * .02));
+	vec2 cellSmall = cellular(vec3(pos, u_time * mouseMoving * .04));
 
 	float facets = cellSmall.y;
     float depth = .2 + 1. - facets;
@@ -251,11 +245,10 @@ vec4 getBump (vec2 pos, vec2 uv) {
     return bump;
 }
 
-float breathing=(exp(sin(u_time*2.0*3.14159/32.0)) - 0.36787944)*0.42545906412;
+float breathing=(exp(sin(u_time*2.0*3.14159/16.0)) + 0.36787944/5.)*0.42545906412;
 float mouseEffect(vec2 uv, vec2 mouse, float size)
 {
     float dist=length(uv-mouse);
-    // return smoothstep(size, size+0.12*(breathing+0.5), dist);  //size
 	return smoothstep(size*0.8, size+2.25*(0.8), dist);
 }
  
@@ -266,53 +259,46 @@ void main(void)
     vec2 st = uv; // for tex0: img
     uv = uv * 2.0 - 1.0;
     uv.x *= u_resolution.x / u_resolution.y;
-	//
+	// ---
 	vec2 mouse = u_mouse.xy / u_resolution.xy;
     mouse = mouse * 2.0 - 1.0;
     mouse.x *= u_resolution.x / u_resolution.y;
 
-    vec2 pos = uv * 2.8 + (noise(u_mouse.xy)*5. / u_resolution.xy);
-    // vec2 pos = uv * 2.8;
-    
-	vec4 bump = getBump(pos, uv);
-    
-    //vec4 texture = texture(iChannel0, pos * .1 + (bump.yz * 2. - .5) * .1);
-    //vec3 color = vec3(texture.r) * 1.;
-    
-	// texture
-    vec4 shadeColor= texture2D(u_tex0, st);
-	// vec3 color = mix(shadeColor.b*vec3(0.607,0.848,0.900), vec3(noise(bump.yz * 2. - 1.)), 0.6);
-
-	// color
-	vec3 color = vec3(noise(bump.yz * 2. - 1.));
-    // vec3 color = vec3(noise(bump.yz * 2. - 1.)) * .6; // new 1229
-    color += pow(dot(bump.xyz, vec3(1.)), 1.) * .3;
-    color *= .9 + (.7 + pow(length(sin(pos * .5)), 4.) * .3) * pow(length(uv * .6 + .4), 5.) * .2;
-    // color *= bump.w;
-    // color *= distance(vec2(0.), uv);
-
-    // color += vec3(0.607,0.848,0.900) * shadeColor.b * 1.;//(sin(u_time)+0.7);
-
-	// mouse
-	float value = mouseEffect(uv, mouse, 0.03);
-
 	// detect mouse is moving or not
-	if((mouse.x > -1.8 && mouse.x < 1.8) && (mouse.y > -0.95 && mouse.y < 0.95)) // new 1229
+	if((mouse.x > -1.8 && mouse.x < 1.8) && (mouse.y > -0.95 && mouse.y < 0.95))
 	{
-		mouseMoving = 1; // new 1229
-		color = vec3(shadeColor) * vec3(0.607,0.848,0.900) + 0.8 * color * breathing + value * 0.6; // new 1229
+		mouseMoving = 1.0;
 	}
 	else 
 	{
-		mouseMoving = 0; // new 1229
-		color = shadeColor.b*vec3(0.607,0.848,0.900) + 0.6 * color; // new 1229
+		mouseMoving = 0.0;
 	}
 
+	// noise
+    vec2 pos = uv * 2.8 + (noise(u_mouse.xy)*5. / u_resolution.xy);
     
+	// bump map
+	vec4 bump = getBump(pos, uv);
+    
+	// texture
+    vec4 shadeColor= texture2D(u_tex0, st);
 
-    // gl_FragColor = vec4(color*0.8*breathing, bump.w * .8) + shadeColor*0.8 + value*0.3*breathing;
-	// gl_FragColor = vec4(color*0.8*(value+0.5)*breathing, bump.w * .8) + shadeColor*0.8; //v
-	// mix(shadeColor.b*vec3(0.607,0.848,0.900), vec3(noise(bump.yz * 2. - 1.)), 0.6);
+	// color
+	vec3 color = vec3(noise(bump.yz * 2. - 1.));
+    color += pow(dot(bump.xyz, vec3(1.)), 1.) * .3;
+    color *= .9 + (.7 + pow(length(sin(pos * .5)), 4.) * .3) * pow(length(uv * .6 + .4), 5.) * .2;
+
+	// mouse
+	float value = mouseEffect(uv, mouse, 0.01);
+
+	if(mouseMoving == 1.0)
+	{
+		color = vec3(shadeColor)*0.8 * vec3(0.607,0.848,0.900) + 0.8 * color * breathing + value * 0.6;
+	}
+	else 
+	{
+		color = shadeColor.b*vec3(0.607,0.848,0.900) + 0.5 * color.b;
+	}
+
 	gl_FragColor = vec4(color, bump.w * .8);
-	// gl_FragColor += vec4(value)*0.8;
 }
