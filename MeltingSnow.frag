@@ -35,29 +35,29 @@ uniform sampler2D u_tex0;
 float mouseMoving = 0.0;
 
 float rand(vec2 n) { 
-    return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+    	return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
 }
 
 float noise(vec2 n) {
-    const vec2 d = vec2(0.0, 1.0);
-  vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
-    return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+    	const vec2 d = vec2(0.0, 1.0);
+  	vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+    	return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
 }
 
 const mat2 m2 = mat2(0.8,-0.6,0.6,0.8);
 float fbm( in vec2 p ){
-    float f = 0.0;
-    f += 0.5000*noise( p ); p = m2*p*2.02;
-    f += 0.2500*noise( p ); p = m2*p*2.03;
-    f += 0.1250*noise( p ); p = m2*p*2.01;
-    f += 0.0625*noise( p );
+    	float f = 0.0;
+    	f += 0.5000*noise( p ); p = m2*p*2.02;
+    	f += 0.2500*noise( p ); p = m2*p*2.03;
+    	f += 0.1250*noise( p ); p = m2*p*2.01;
+    	f += 0.0625*noise( p );
 
-    return f/0.9375;
+    	return f/0.9375;
 }
 
 // Permutation polynomial: (34x^2 + x) mod 289
 vec3 permute(vec3 x) {
-  return mod((34.0 * x + 1.0) * x, 289.0);
+  	return mod((34.0 * x + 1.0) * x, 289.0);
 }
 
 vec2 cellular(vec3 P) {
@@ -221,34 +221,34 @@ float getDepth(vec2 pos, vec2 uv) {
 	vec2 cellSmall = cellular(vec3(pos, u_time * mouseMoving * .04));
 
 	float facets = cellSmall.y;
-    float depth = .2 + 1. - facets;
-    depth = pow(depth, 2.);
-    depth += fbm(pos * 10.) * .1;
-    //depth *= (.7 + pow(length(sin(pos * .5)), 4.) * .3) * pow(length(uv * .6 + .4), 5.);
-    return depth;
+    	float depth = .2 + 1. - facets;
+    	depth = pow(depth, 2.);
+    	depth += fbm(pos * 10.) * .1;
+    	//depth *= (.7 + pow(length(sin(pos * .5)), 4.) * .3) * pow(length(uv * .6 + .4), 5.);
+    	return depth;
 }
 
 vec4 getBump (vec2 pos, vec2 uv) {
-    vec2 size = vec2(2.0,0.0);
-    vec3 off = vec3(-1,0,1);
-    size *= .02; 
-    off *= .05;
+    	vec2 size = vec2(2.0,0.0);
+    	vec3 off = vec3(-1,0,1);
+    	size *= .02; 
+    	off *= .05;
     
-    float s11 = getDepth(pos, uv);
-    float s01 = getDepth(pos + off.xy, uv);
-    float s21 = getDepth(pos + off.zy, uv);
-    float s10 = getDepth(pos + off.yx, uv);
-    float s12 = getDepth(pos + off.yz, uv);
-    vec3 va = normalize(vec3(size.xy,s21-s01));
-    vec3 vb = normalize(vec3(size.yx,s12-s10));
-    vec4 bump = vec4( cross(va,vb), s11 );
-    return bump;
+    	float s11 = getDepth(pos, uv);
+    	float s01 = getDepth(pos + off.xy, uv);
+    	float s21 = getDepth(pos + off.zy, uv);
+    	float s10 = getDepth(pos + off.yx, uv);
+    	float s12 = getDepth(pos + off.yz, uv);
+    	vec3 va = normalize(vec3(size.xy,s21-s01));
+    	vec3 vb = normalize(vec3(size.yx,s12-s10));
+    	vec4 bump = vec4( cross(va,vb), s11 );
+    	return bump;
 }
 
 float breathing=(exp(sin(u_time*2.0*3.14159/16.0)) + 0.36787944/5.)*0.42545906412;
 float mouseEffect(vec2 uv, vec2 mouse, float size)
 {
-    float dist=length(uv-mouse);
+    	float dist=length(uv-mouse);
 	return smoothstep(size*0.8, size+2.25*(0.8), dist);
 }
  
@@ -256,13 +256,13 @@ void main(void)
 {
 	// uv & mouse -> 1:1, center
 	vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-    vec2 st = uv; // for tex0: img
-    uv = uv * 2.0 - 1.0;
-    uv.x *= u_resolution.x / u_resolution.y;
+    	vec2 st = uv; // for tex0: img
+    	uv = uv * 2.0 - 1.0;
+    	uv.x *= u_resolution.x / u_resolution.y;
 	// ---
 	vec2 mouse = u_mouse.xy / u_resolution.xy;
-    mouse = mouse * 2.0 - 1.0;
-    mouse.x *= u_resolution.x / u_resolution.y;
+    	mouse = mouse * 2.0 - 1.0;
+    	mouse.x *= u_resolution.x / u_resolution.y;
 
 	// detect mouse is moving or not
 	if((mouse.x > -1.8 && mouse.x < 1.8) && (mouse.y > -0.95 && mouse.y < 0.95))
@@ -275,18 +275,18 @@ void main(void)
 	}
 
 	// noise
-    vec2 pos = uv * 2.8 + (noise(u_mouse.xy)*5. / u_resolution.xy);
+    	vec2 pos = uv * 2.8 + (noise(u_mouse.xy)*5. / u_resolution.xy);
     
 	// bump map
 	vec4 bump = getBump(pos, uv);
     
 	// texture
-    vec4 shadeColor= texture2D(u_tex0, st);
+    	vec4 shadeColor= texture2D(u_tex0, st);
 
 	// color
 	vec3 color = vec3(noise(bump.yz * 2. - 1.));
-    color += pow(dot(bump.xyz, vec3(1.)), 1.) * .3;
-    color *= .9 + (.7 + pow(length(sin(pos * .5)), 4.) * .3) * pow(length(uv * .6 + .4), 5.) * .2;
+    	color += pow(dot(bump.xyz, vec3(1.)), 1.) * .3;
+    	color *= .9 + (.7 + pow(length(sin(pos * .5)), 4.) * .3) * pow(length(uv * .6 + .4), 5.) * .2;
 
 	// mouse
 	float value = mouseEffect(uv, mouse, 0.01);
